@@ -17,9 +17,20 @@ import java.util.HashMap;
  * @author shilei
  * @Date 2017/10/30.
  */
-public class FileUtls {
+public class FileUtils {
+    public static HashMap<String, L2> getIcd10DataLevel2() {
+        HashMap<String, L2> icd10L2 = new HashMap<>();
 
-    public static HashMap<String, L1> getIcd10Data() {
+        HashMap<String, L1> icd10L1 = getIcd10DataLevel1();
+        icd10L1.forEach((s, l1) -> {
+            l1.getL2map().forEach((s2, l2) -> {
+                icd10L2.put(s2, l2);
+            });
+        });
+        return icd10L2;
+    }
+
+    public static HashMap<String, L1> getIcd10DataLevel1() {
 
         HashMap<String, L1> icd10 = new HashMap<>();
 

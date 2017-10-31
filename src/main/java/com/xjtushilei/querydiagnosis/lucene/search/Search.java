@@ -22,10 +22,13 @@ import org.apache.lucene.store.FSDirectory;
  */
 public class Search {
     public static void main(String[] args) {
-        search("哭笑无常", 15);
+        search("胃一疼就拉稀", 25);
     }
 
     public static ArrayList<String> search(String input, int resultNum) {
+        if (input.equals("") || input == null) {
+            return new ArrayList<>();
+        }
         ArrayList<String> result = new ArrayList<>();
         //索引存放的位置
         Directory directory;
@@ -45,12 +48,9 @@ public class Search {
             // 检索索引，获取符合条件的前10条记录
             TopDocs topDocs = searcher.search(query, resultNum);
             if (topDocs != null) {
-                System.out.println("符合条件的记录为： " + topDocs.totalHits);
                 for (int i = 0; i < topDocs.scoreDocs.length; i++) {
                     Document doc = searcher.doc(topDocs.scoreDocs[i].doc);
                     result.add(doc.get("name"));
-                    System.out.println("name = " + doc.get("name"));
-                    System.out.println("rate = " + doc.get("rate"));
                 }
             }
             directory.close();

@@ -3,13 +3,14 @@ package com.xjtushilei.querydiagnosis.sym;
 
 import com.xjtushilei.querydiagnosis.entity.icd10.L1;
 import com.xjtushilei.querydiagnosis.entity.sym.Sym;
-import com.xjtushilei.querydiagnosis.utils.FileUtls;
-import org.apache.commons.io.FileUtils;
+import com.xjtushilei.querydiagnosis.utils.FileUtils;
 import org.springframework.util.ResourceUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+
+import static com.xjtushilei.querydiagnosis.sym.SymMethod.get15disease;
 
 
 /**
@@ -18,13 +19,18 @@ import java.util.*;
  */
 public class DealData {
     public static void main(String[] args) {
-        getSyms();
+        //        getSyms();
+        System.out.println(FileUtils.getIcd10DataLevel2().size());
         //        getDealSymData();
     }
 
+    /**
+     * @return icd10 level2对应的症状
+     */
+
     public static HashMap<String, ArrayList<Sym>> getDealSymData() {
         HashMap<String, ArrayList<Sym>> map = new HashMap<>();
-        HashMap<String, L1> icd10 = FileUtls.getIcd10Data();
+        HashMap<String, L1> icd10 = FileUtils.getIcd10DataLevel1();
         icd10.forEach((k1, v1) -> {
             v1.getL2map().forEach((k2, v2) -> {
                 map.put(v2.getCode(), new ArrayList<>());
@@ -33,7 +39,7 @@ public class DealData {
         List<String> list = null;
         try {
             File file = ResourceUtils.getFile("classpath:data/disease-symptom.txt");
-            list = FileUtils.readLines(file, "utf-8");
+            list = org.apache.commons.io.FileUtils.readLines(file, "utf-8");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -71,13 +77,13 @@ public class DealData {
             }
         }
         HashMap<String, ArrayList<Sym>> noRepeatMap = new HashMap<>();
-        //开始计算每一个疾病的每个特征中权重，重复权重策略：+20
+        //开始计算每一个疾病的每个特征中权重，重复权重策略：+5
         for (Map.Entry<String, ArrayList<Sym>> entry : map.entrySet()) {
             HashMap<String, Float> temp = new HashMap<>();
             ArrayList<Sym> templist = entry.getValue();
             for (int i = 0; i < templist.size(); i++) {
                 if (temp.containsKey(templist.get(i))) {
-                    templist.get(i).setRate(templist.get(i).getRate() + 20);
+                    templist.get(i).setRate(templist.get(i).getRate() + 5);
                 } else {
                     temp.put(templist.get(i).getName(), templist.get(i).getRate());
                 }
@@ -91,14 +97,26 @@ public class DealData {
         return noRepeatMap;
     }
 
-
+    /**
+     * 打印所有症状，到文件，方便查看
+     */
     private static void getSyms() {
         HashMap<String, ArrayList<Sym>> icd10Syms = DealData.getDealSymData();
         HashSet<Sym> symHashSet = new HashSet<>();
+        //限制icd10的个数
+        List<String> disease15 = get15disease();
+
         for (Map.Entry<String, ArrayList<Sym>> entry : icd10Syms.entrySet()) {
             ArrayList<Sym> symArrayList = entry.getValue();
-            symArrayList.forEach(s -> symHashSet.add(s));
+            // 只保留15个疾病
+            if (disease15.contains(entry.getKey())) {
+                symArrayList.forEach(s -> symHashSet.add(s));
+            }
         }
+        //        for (Map.Entry<String, ArrayList<Sym>> entry : icd10Syms.entrySet()) {
+        //            ArrayList<Sym> symArrayList = entry.getValue();
+        //            symArrayList.forEach(s -> symHashSet.add(s));
+        //        }
         StringBuffer stringBuffer = new StringBuffer();
 
         for (Sym sym : symHashSet) {
@@ -106,12 +124,13 @@ public class DealData {
         }
         try {
             File file = new File(System.getProperties().getProperty("user.home") + "/sym_2_index.txt");
-            FileUtils.writeStringToFile(file, stringBuffer.toString(), "utf-8");
+            org.apache.commons.io.FileUtils.writeStringToFile(file, stringBuffer.toString(), "utf-8");
         } catch (IOException e) {
             e.printStackTrace();
         }
 
     }
+
 
     private static String getL2Code(String l3Code, Map<String, ArrayList<Sym>> map) {
 

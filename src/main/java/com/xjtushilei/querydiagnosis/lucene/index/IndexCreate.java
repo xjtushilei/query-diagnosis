@@ -16,10 +16,9 @@ import org.apache.lucene.store.FSDirectory;
 
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
+
+import static com.xjtushilei.querydiagnosis.sym.SymMethod.get15disease;
 
 /**
  * 创建索引
@@ -60,9 +59,16 @@ public class IndexCreate {
             //添加需要索引的文档
             HashMap<String, ArrayList<Sym>> icd10Syms = DealData.getDealSymData();
             HashSet<Sym> symHashSet = new HashSet<>();
+
+            List<String> disease15 = get15disease();
+
             for (Map.Entry<String, ArrayList<Sym>> entry : icd10Syms.entrySet()) {
                 ArrayList<Sym> symArrayList = entry.getValue();
-                symArrayList.forEach(s -> symHashSet.add(s));
+                // 只保留15个疾病
+                if (disease15.contains(entry.getKey())) {
+                    symArrayList.forEach(s -> symHashSet.add(s));
+                }
+
             }
             for (Sym sym : symHashSet) {
                 //创建文档
