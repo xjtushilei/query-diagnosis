@@ -1,12 +1,12 @@
-package com.xjtushilei.querydiagnosis.lucene.index;
+package com.xjtushilei.querydiagnosis.core.lucene.index;
 
 import com.xjtushilei.querydiagnosis.entity.sym.Sym;
-import com.xjtushilei.querydiagnosis.sym.DealData;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.document.FloatField;
+import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
@@ -18,7 +18,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.*;
 
-import static com.xjtushilei.querydiagnosis.sym.SymMethod.get15disease;
+import static com.xjtushilei.querydiagnosis.core.sym.DealData.getDealSymDataL1;
 
 /**
  * 创建索引
@@ -57,25 +57,19 @@ public class IndexCreate {
 
         try {
             //添加需要索引的文档
-            HashMap<String, ArrayList<Sym>> icd10Syms = DealData.getDealSymData();
-            HashSet<Sym> symHashSet = new HashSet<>();
-
-            List<String> disease15 = get15disease();
-
-            for (Map.Entry<String, ArrayList<Sym>> entry : icd10Syms.entrySet()) {
-                ArrayList<Sym> symArrayList = entry.getValue();
-                // 只保留15个疾病
-                if (disease15.contains(entry.getKey())) {
-                    symArrayList.forEach(s -> symHashSet.add(s));
+            HashMap<String, HashMap<String, ArrayList<Sym>>> L1Syms = getDealSymDataL1();
+            for (Map.Entry<String, HashMap<String, ArrayList<Sym>>> l1Syms : L1Syms.entrySet()) {
+                for (Map.Entry<String, ArrayList<Sym>> l2Map : l1Syms.getValue().entrySet()) {
+                    for (Sym s : l2Map.getValue()) {
+                        // 创建文档
+                        Document doc = new Document();
+                        doc.add(new StringField("l1code", l1Syms.getKey(), Store.YES));
+                        doc.add(new StringField("l2code", l2Map.getKey(), Store.YES));
+                        doc.add(new TextField("name", s.getName(), Store.YES));
+                        doc.add(new FloatField("rate", s.getRate(), Store.YES));
+                        indexWriter.addDocument(doc);
+                    }
                 }
-
-            }
-            for (Sym sym : symHashSet) {
-                //创建文档
-                Document doc = new Document();
-                doc.add(new TextField("name", sym.getName(), Store.YES));
-                doc.add(new FloatField("rate", sym.getRate(), Store.YES));
-                indexWriter.addDocument(doc);
             }
             // 将indexWrite操作提交，如果不提交，之前的操作将不会保存到硬盘
             // 但是这一步很消耗系统资源，索引执行该操作需要有一定的策略
