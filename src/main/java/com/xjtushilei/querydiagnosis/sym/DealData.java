@@ -1,16 +1,16 @@
-package com.xjtushilei.querydiagnosis.core.sym;
+package com.xjtushilei.querydiagnosis.sym;
 
 
 import com.xjtushilei.querydiagnosis.entity.icd10.L1;
 import com.xjtushilei.querydiagnosis.entity.sym.Sym;
 import com.xjtushilei.querydiagnosis.utils.FileUtils;
-import org.apache.lucene.document.*;
 import org.springframework.util.ResourceUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
+import static com.xjtushilei.querydiagnosis.sym.SymMethod.get15disease;
 
 
 /**
@@ -19,44 +19,16 @@ import java.util.*;
  */
 public class DealData {
     public static void main(String[] args) {
-        getSyms();
-        //        final int[] i = {0};
-        //        getDealSymDataL1().forEach((l1,m2)->{
-        //            i[0] = i[0] +m2.size();
-        //        });
-        //        System.out.println(i[0]);
-        //        getDealSymDataL2();
-    }
-
-    /**
-     * @return icd10 level1对应的症状
-     */
-
-    public static HashMap<String, HashMap<String, ArrayList<Sym>>> getDealSymDataL1() {
-        HashMap<String, HashMap<String, ArrayList<Sym>>> result = new HashMap<>();
-        HashMap<String, L1> m1 = FileUtils.getIcd10DataLevel1();
-        HashMap<String, ArrayList<Sym>> mSymL2 = getDealSymDataL2();
-        mSymL2.forEach((s2, symList) -> {
-            m1.forEach((m1s, m1l1) -> {
-                if (m1l1.getL2map().keySet().contains(s2)) {
-                    if (result.containsKey(m1s)) {
-                        result.get(m1s).put(s2, symList);
-                    } else {
-                        result.put(m1s, new HashMap<>());
-                        result.get(m1s).put(s2, symList);
-                    }
-                }
-            });
-        });
-
-        return result;
+        //        getSyms();
+        System.out.println(FileUtils.getIcd10DataLevel2().size());
+        //        getDealSymData();
     }
 
     /**
      * @return icd10 level2对应的症状
      */
 
-    public static HashMap<String, ArrayList<Sym>> getDealSymDataL2() {
+    public static HashMap<String, ArrayList<Sym>> getDealSymData() {
         HashMap<String, ArrayList<Sym>> map = new HashMap<>();
         HashMap<String, L1> icd10 = FileUtils.getIcd10DataLevel1();
         icd10.forEach((k1, v1) -> {
@@ -129,24 +101,27 @@ public class DealData {
      * 打印所有症状，到文件，方便查看
      */
     private static void getSyms() {
-        StringBuffer stringBuffer = new StringBuffer();
+        HashMap<String, ArrayList<Sym>> icd10Syms = DealData.getDealSymData();
+        HashSet<Sym> symHashSet = new HashSet<>();
+        //限制icd10的个数
+        List<String> disease15 = get15disease();
 
-        HashMap<String, HashMap<String, ArrayList<Sym>>> L1Syms = getDealSymDataL1();
-        for (Map.Entry<String, HashMap<String, ArrayList<Sym>>> l1Syms : L1Syms.entrySet()) {
-            for (Map.Entry<String, ArrayList<Sym>> l2Map : l1Syms.getValue().entrySet()) {
-                for (Sym s : l2Map.getValue()) {
-                    // 创建文档
-                    Document doc = new Document();
-                    doc.add(new StringField("l1code", l1Syms.getKey(), Field.Store.YES));
-                    doc.add(new StringField("l2code", l2Map.getKey(), Field.Store.YES));
-                    doc.add(new TextField("name", s.getName(), Field.Store.YES));
-                    doc.add(new FloatField("rate", s.getRate(), Field.Store.YES));
-                    stringBuffer.append(l1Syms.getKey() + "," + l2Map.getKey() + "," + s.getName() + "," + s.getRate() + "\n");
-
-                }
+        for (Map.Entry<String, ArrayList<Sym>> entry : icd10Syms.entrySet()) {
+            ArrayList<Sym> symArrayList = entry.getValue();
+            // 只保留15个疾病
+            if (disease15.contains(entry.getKey())) {
+                symArrayList.forEach(s -> symHashSet.add(s));
             }
         }
+        //        for (Map.Entry<String, ArrayList<Sym>> entry : icd10Syms.entrySet()) {
+        //            ArrayList<Sym> symArrayList = entry.getValue();
+        //            symArrayList.forEach(s -> symHashSet.add(s));
+        //        }
+        StringBuffer stringBuffer = new StringBuffer();
 
+        for (Sym sym : symHashSet) {
+            stringBuffer.append(sym.getName() + "," + sym.getRate() + "\n");
+        }
         try {
             File file = new File(System.getProperties().getProperty("user.home") + "/sym_2_index.txt");
             org.apache.commons.io.FileUtils.writeStringToFile(file, stringBuffer.toString(), "utf-8");
