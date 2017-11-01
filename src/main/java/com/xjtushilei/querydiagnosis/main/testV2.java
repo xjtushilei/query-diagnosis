@@ -27,11 +27,12 @@ public class testV2 {
         diagnosisResult.add(temp);
 
         //得到jingwei的识别实体
-        List<String> input = Arrays.asList("胃难受", "难受吐", "拉", "头疼");
-        //        List<String> input = Arrays.asList("胃难受   每次都吐    有时拉    头疼    一着凉胃就难受吐    最近隔三差五胃就难受   去挂消炎水");
+        List<String> input = Arrays.asList("胃难受", "难受吐", "拉肚子", "头疼", "恶心");
+        //        List<String> input = Arrays.asList("胃难受   每次都吐    有时拉肚子    头疼    一着凉胃就难受吐    最近隔三差五胃就难受   去挂消炎水");
 
         //进行查询
         LinkedHashMap<String, Float> searchResult = Search.searchAll(input, diagnosisResult, 2);
+        print(searchResult);
         print(SymMethod.getSymptomRecommend(searchResult, diagnosisResult, 10));
 
     }
