@@ -14,7 +14,7 @@ public class Controller {
 
     //    @RequestMapping(value = "/search")
     //    public ArrayList<HashMap<String,String>> search(String input, int num) {
-    //        return Search.search(input, Arrays.asList(), num);
+//            return Search.search(input, Arrays.asList(), num);
     //    }
     //
     //    @RequestMapping(value = "/symRecommend")

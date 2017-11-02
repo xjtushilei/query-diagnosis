@@ -1,5 +1,7 @@
 package com.xjtushilei.querydiagnosis.utils;
 
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import com.xjtushilei.querydiagnosis.entity.icd10.L1;
 import com.xjtushilei.querydiagnosis.entity.icd10.L2;
 import com.xjtushilei.querydiagnosis.entity.icd10.L3;
@@ -10,18 +12,59 @@ import jxl.read.biff.BiffException;
 import org.springframework.util.ResourceUtils;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * @author shilei
  * @Date 2017/10/30.
  */
 public class FileUtils {
-    public static HashMap<String, L2> getIcd10DataLevel2() {
+
+    public static void main(String[] args) throws IOException {
+//        org.apache.commons.io.FileUtils.writeStringToFile(new File("D://icd10-6-L1.json"),GsonUtils.toString
+//                (getIcd10DataLevel1FromXls()),"utf-8");
+//        org.apache.commons.io.FileUtils.writeStringToFile(new File("D://icd10-6-L2.json"),GsonUtils.toString
+//                (getIcd10DataLevel2FromXls()),"utf-8");
+        getIcd10DataLevel1FromJson();
+        getIcd10DataLevel2FromJson();
+    }
+
+    public static HashMap<String, L1> getIcd10DataLevel1FromJson() {
+        try {
+            File file = ResourceUtils.getFile("classpath:data/icd10-6-L1.json");
+            String json= org.apache.commons.io.FileUtils.readFileToString(file,"utf-8");
+            HashMap<String, L1> icd10L1 = new GsonBuilder().create().fromJson(json,new TypeToken<HashMap<String, L1>>
+                    (){}
+                    .getType());
+            return  icd10L1;
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return  null;
+        }
+    }
+    public static HashMap<String, L2> getIcd10DataLevel2FromJson() {
+        try {
+            File file = ResourceUtils.getFile("classpath:data/icd10-6-L2.json");
+            String json= org.apache.commons.io.FileUtils.readFileToString(file,"utf-8");
+            HashMap<String, L2> icd10L2 = new GsonBuilder().create().fromJson(json,new TypeToken<HashMap<String, L2>>(){}
+                    .getType());
+            return  icd10L2;
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return  null;
+        }
+    }
+
+
+    public static HashMap<String, L2> getIcd10DataLevel2FromXls() {
         HashMap<String, L2> icd10L2 = new HashMap<>();
 
-        HashMap<String, L1> icd10L1 = getIcd10DataLevel1();
+        HashMap<String, L1> icd10L1 = getIcd10DataLevel1FromXls();
         icd10L1.forEach((s, l1) -> {
             l1.getL2map().forEach((s2, l2) -> {
                 icd10L2.put(s2, l2);
@@ -30,7 +73,7 @@ public class FileUtils {
         return icd10L2;
     }
 
-    public static HashMap<String, L1> getIcd10DataLevel1() {
+    public static HashMap<String, L1> getIcd10DataLevel1FromXls() {
 
         HashMap<String, L1> icd10 = new HashMap<>();
 
@@ -77,7 +120,6 @@ public class FileUtils {
                             (l4_code)) {
                 icd10.get(l1_code).getL2map().get(l2_code).getL3map().get(l3_code).getL4map().put(l4_code, new L4
                         (l4_code, l4_name));
-
             }
 
         }

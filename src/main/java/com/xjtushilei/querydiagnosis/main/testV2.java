@@ -1,7 +1,6 @@
 package com.xjtushilei.querydiagnosis.main;
 
 import com.xjtushilei.querydiagnosis.core.lucene.search.Search;
-import com.xjtushilei.querydiagnosis.core.sym.SymMethod;
 
 import java.util.*;
 
@@ -33,7 +32,7 @@ public class testV2 {
         //进行查询
         LinkedHashMap<String, Float> searchResult = Search.searchAll(input, diagnosisResult, 2);
         print(searchResult);
-        print(SymMethod.getSymptomRecommend(searchResult, diagnosisResult, 10));
+//        print(SymMethod.getSymptomRecommend(searchResult, diagnosisResult, 10));
 
     }
 }

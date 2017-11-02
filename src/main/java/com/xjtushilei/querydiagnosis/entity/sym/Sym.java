@@ -6,9 +6,9 @@ package com.xjtushilei.querydiagnosis.entity.sym;
  */
 public class Sym {
     private String name;
-    private float rate;
+    private double rate;
 
-    public Sym(String name, float rate) {
+    public Sym(String name, double rate) {
         this.name = name;
         this.rate = rate;
     }
@@ -40,11 +40,11 @@ public class Sym {
         this.name = name;
     }
 
-    public float getRate() {
+    public double getRate() {
         return rate;
     }
 
-    public void setRate(float rate) {
+    public void setRate(double rate) {
         this.rate = rate;
     }
 

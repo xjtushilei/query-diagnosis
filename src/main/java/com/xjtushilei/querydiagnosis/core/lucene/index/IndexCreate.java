@@ -1,13 +1,12 @@
 package com.xjtushilei.querydiagnosis.core.lucene.index;
 
+import com.xjtushilei.querydiagnosis.core.sym.DealData;
+import com.xjtushilei.querydiagnosis.entity.sym.L2Sym;
 import com.xjtushilei.querydiagnosis.entity.sym.Sym;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.document.Document;
+import org.apache.lucene.document.*;
 import org.apache.lucene.document.Field.Store;
-import org.apache.lucene.document.FloatField;
-import org.apache.lucene.document.StringField;
-import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
@@ -18,7 +17,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.*;
 
-import static com.xjtushilei.querydiagnosis.core.sym.DealData.getDealSymDataL1;
+
 
 /**
  * 创建索引
@@ -57,19 +56,18 @@ public class IndexCreate {
 
         try {
             //添加需要索引的文档
-            HashMap<String, HashMap<String, ArrayList<Sym>>> L1Syms = getDealSymDataL1();
-            for (Map.Entry<String, HashMap<String, ArrayList<Sym>>> l1Syms : L1Syms.entrySet()) {
-                for (Map.Entry<String, ArrayList<Sym>> l2Map : l1Syms.getValue().entrySet()) {
-                    for (Sym s : l2Map.getValue()) {
-                        // 创建文档
-                        Document doc = new Document();
-                        doc.add(new StringField("l1code", l1Syms.getKey(), Store.YES));
-                        doc.add(new StringField("l2code", l2Map.getKey(), Store.YES));
-                        doc.add(new TextField("name", s.getName(), Store.YES));
-                        doc.add(new FloatField("rate", s.getRate(), Store.YES));
-                        indexWriter.addDocument(doc);
-                    }
+            HashMap<String, L2Sym> L2SymMap = DealData.getSymFromOriginalFile();
+            for (L2Sym l2Sym : L2SymMap.values()) {
+                for (Sym sym : l2Sym.getAllSymMap().values()) {
+                    // 创建文档
+                    Document doc = new Document();
+                    doc.add(new StringField("l1code", l2Sym.getCodeL1(), Store.YES));
+                    doc.add(new StringField("l2code", l2Sym.getCodeL2(), Store.YES));
+                    doc.add(new TextField("name", sym.getName(), Store.YES));
+                    doc.add(new DoubleField("rate", sym.getRate(), Store.YES));
+                    indexWriter.addDocument(doc);
                 }
+
             }
             // 将indexWrite操作提交，如果不提交，之前的操作将不会保存到硬盘
             // 但是这一步很消耗系统资源，索引执行该操作需要有一定的策略
