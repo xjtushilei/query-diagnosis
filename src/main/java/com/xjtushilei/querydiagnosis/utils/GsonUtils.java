@@ -13,14 +13,8 @@ import java.util.HashMap;
  */
 public class GsonUtils {
 
-    public static void printBeautiful(Object o) {
-        Gson gson = new GsonBuilder()
-                .setPrettyPrinting()
-                .create();
-        System.out.println(gson.toJson(o));
-    }
     public static void print(Object o) {
-        Gson gson = new GsonBuilder().create();
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
         System.out.println(gson.toJson(o));
     }
     public static String toString(Object o) {

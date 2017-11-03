@@ -27,7 +27,7 @@ public class Search {
 
         List<HashMap<String, Object>> diagnosisResult = diagnosisFirst();
 
-        System.out.println(search("急性肠胃炎发烧38啦……打针左氧氟沙星。要不要退烧药,从37到38度了这会已经39了", diagnosisResult, 2));
+        System.out.println(search("3天前嗓子疼，发烧，肚子疼就诊，口腔轻微疱疹，吃药3天，肚子还是疼，做彩超肠系膜淋巴结肿大，初诊急性肠胃炎", diagnosisResult, 12));
     }
 
     /**

@@ -17,11 +17,6 @@ public class ClassificationOfDiseases {
     public static List<HashMap<String, Object>> diagnosisFirst() {
         List<HashMap<String, Object>> result = new ArrayList<>();
         HashMap<String, Object> temp = new HashMap<>();
-        temp.put("name", "内分泌、营养和代谢疾病");
-        temp.put("code", "E00-E90");
-        temp.put("rate", 0.6);
-        result.add(temp);
-        temp = new HashMap<>();
         temp.put("name", "消化系统疾病");
         temp.put("code", "K00-K93");
         temp.put("rate", 0.95);

@@ -12,9 +12,6 @@ public class Result {
     private Integer code;
     private String msg;
 
-    private String diagnosisSum;
-    private String recommendSymSum;
-
     //推荐的疾病症状
     List<Pair<String, Double>> recommendResult;
     //诊断的结果列表
@@ -23,11 +20,9 @@ public class Result {
     public Result() {
     }
 
-    public Result(Integer code, String msg, String diagnosisSum, String recommendSymSum, List<Pair<String, Double>> recommendResult, List<Diagnosis> diagnosis) {
+    public Result(Integer code, String msg,  List<Pair<String, Double>> recommendResult, List<Diagnosis> diagnosis) {
         this.code = code;
         this.msg = msg;
-        this.diagnosisSum = diagnosisSum;
-        this.recommendSymSum = recommendSymSum;
         this.recommendResult = recommendResult;
         this.diagnosis = diagnosis;
     }
@@ -48,21 +43,6 @@ public class Result {
         this.msg = msg;
     }
 
-    public String getDiagnosisSum() {
-        return diagnosisSum;
-    }
-
-    public void setDiagnosisSum(String diagnosisSum) {
-        this.diagnosisSum = diagnosisSum;
-    }
-
-    public String getRecommendSymSum() {
-        return recommendSymSum;
-    }
-
-    public void setRecommendSymSum(String recommendSymSum) {
-        this.recommendSymSum = recommendSymSum;
-    }
 
     public List<Pair<String, Double>> getRecommendResult() {
         return recommendResult;
