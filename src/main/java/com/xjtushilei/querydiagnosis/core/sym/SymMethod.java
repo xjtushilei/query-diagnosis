@@ -81,21 +81,11 @@ public class SymMethod {
 
         //计算每个疾病的概率
         for (L2Sym l2Sym : L2symLess) {
-            double allHit = 0;
-            for (String namei : inputList) {
-                double Csi = 0;
-                double Dsum = L2symLess.size(); //疾病的种数
-                for (L2Sym l2Sym2 : L2symLess) {
-                    if (l2Sym2.getAllSymMap().containsKey(namei) && l2Sym2.getNameL2().equals(l2Sym.getNameL2())) {
-                        Csi++;
-                    }
-                }
-                //                System.out.println(Csi+"\t"+Dsum);
-                allHit = allHit + (1 - Csi / Dsum);
-            }
-            allHit = allHit / inputList.size();
-//            System.out.println(allHit);
-            l2Sym.setRate(allHit);
+            final double[] rate = {0};
+            l2Sym.getSufferSymMap().values().forEach(sym -> {
+                    rate[0] = rate[0] +sym.getRate();
+            });
+            l2Sym.setRate(rate[0]);
         }
         Collections.sort(L2symLess,(l1,l2)->Double.compare(l2.getRate(),l1.getRate()));
 
