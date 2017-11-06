@@ -17,5 +17,7 @@ public class test {
             System.out.println(1);
             System.out.println(s.get(i));
         }
+        double a = (double) 3 / (double) 4;
+        System.out.println(a);
     }
 }
