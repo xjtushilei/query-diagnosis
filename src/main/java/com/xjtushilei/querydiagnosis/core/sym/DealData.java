@@ -6,7 +6,6 @@ import com.google.gson.reflect.TypeToken;
 import com.xjtushilei.querydiagnosis.entity.icd10.L1;
 import com.xjtushilei.querydiagnosis.entity.sym.L2Sym;
 import com.xjtushilei.querydiagnosis.entity.sym.Sym;
-import com.xjtushilei.querydiagnosis.utils.FileUtils;
 import com.xjtushilei.querydiagnosis.utils.GsonUtils;
 import org.springframework.util.ResourceUtils;
 
@@ -17,7 +16,6 @@ import java.util.List;
 import java.util.Set;
 
 import static com.xjtushilei.querydiagnosis.utils.FileUtils.getIcd10DataLevel1FromJson;
-import static com.xjtushilei.querydiagnosis.utils.GsonUtils.print;
 
 
 /**
@@ -27,10 +25,10 @@ import static com.xjtushilei.querydiagnosis.utils.GsonUtils.print;
 public class DealData {
     public static void main(String[] args) throws IOException {
 
-//        org.apache.commons.io.FileUtils.writeStringToFile(new File("D://icd10-l2-all-syms.json"), GsonUtils.toString
-//                        (getSymFromOriginalFile()),"utf-8");
+        org.apache.commons.io.FileUtils.writeStringToFile(new File("D://icd10-l2-all-syms.json"), GsonUtils.toString
+                (getSymFromOriginalFile()), "utf-8");
 
-        getIcd10DataLevel1FromJson();
+        //        getIcd10DataLevel1FromJson();
     }
 
     /**
@@ -69,7 +67,7 @@ public class DealData {
         //获取症状数据，苏丽娟给的
         List<String> allOriginalSymList = null;
         try {
-            File file = ResourceUtils.getFile("classpath:data/disease-symptom.txt");
+            File file = ResourceUtils.getFile("classpath:data/disease-symptom3.txt");
             allOriginalSymList = org.apache.commons.io.FileUtils.readLines(file, "utf-8");
         } catch (IOException e) {
             e.printStackTrace();
@@ -99,7 +97,7 @@ public class DealData {
                     continue;
                 }
                 HashMap<String, Sym> tempMap = map.get(l2code).getAllSymMap();
-                String[] comma = tabs[2].trim().split(",");
+                String[] comma = tabs[2].trim().split(" ");
                 for (int k = 0; k < comma.length; k++) {
                     String[] colon = comma[k].trim().split(":");
                     String symName = colon[0];
