@@ -2,12 +2,13 @@ package com.xjtushilei.querydiagnosis.core.sym;
 
 import com.xjtushilei.querydiagnosis.entity.sym.*;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.ImmutableTriple;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Set;
 
 import static com.xjtushilei.querydiagnosis.core.sym.ClassificationOfDiseases.diagnosisFirst;
-import static com.xjtushilei.querydiagnosis.utils.GsonUtils.print;
 
 
 /**
@@ -17,41 +18,37 @@ import static com.xjtushilei.querydiagnosis.utils.GsonUtils.print;
 public class SymMethod {
     public static void main(String[] args) {
         //得到jingwei的诊断分类结果，包含概率
-        List<HashMap<String, Object>> step1DiagnosisResult = diagnosisFirst();
+        Input input = diagnosisFirst();
         //        getSymptomRecommend(Arrays.asList("呕吐", "上吐下泻"));
-        Result result = diagnosis(Arrays.asList("呕吐", "上吐下泻", "胃热疼痛", "稀便"), step1DiagnosisResult, 6);
-        print(result);
+        Result result = diagnosis(input.getInput(), input, 6);
+        //        print(result);
     }
 
-    public static Result diagnosis(List<String> inputList, List<HashMap<String, Object>> step1DiagnosisResult, int
+    public static Result diagnosis(List<String> inputList, Input input, int
             returnMaxSyms) {
-        //得到第一步的诊断结果，根据code进行限制
-        HashSet<String> step1Codes = new HashSet<>();
-        //得到第一步的诊断结果，得到rate，方便后续进行计算疾病的概率从而进行排序
-        HashMap<String, ImmutableTriple<String, String, Double>> step1Rate = new HashMap<>();
+        HashMap<String, Double> diseaseRateMap = new HashMap<>();
+        for (int i = 0; i < input.getL3name().size(); i++) {
+            diseaseRateMap.put(input.getL3name().get(i), input.getL3rate().get(i));
+        }
 
-        step1DiagnosisResult.forEach((HashMap<String, Object> map) -> {
-            step1Codes.add((String) map.get("code"));
-            ((ArrayList<ImmutableTriple<String, String, Double>>) map.get("analysis")).forEach(t -> {
-                step1Rate.put(t.getLeft(), t);
-            });
-        });
-        //待处理的L2sym,只包含1个大类科室且患了该病
-        ArrayList<L2Sym> L2symLess = new ArrayList<>();
+        //待处理的L3sym
+        ArrayList<L3Sym> L3symLess = new ArrayList<>();
         //目前所有特征的概率
         ArrayList<SymptomProbability> rateMatrix = new ArrayList<>();
-        //得到只有1个level2的疾病们，并初始化特征矩阵
-        HashMap<String, L2Sym> l2SymMap = DealData.getSymFromJson();
-        assert l2SymMap != null;
-        l2SymMap.values().forEach(l2Sym -> {
-            //根据第一部的结果，删除掉无关的level2
-            if (step1Codes.contains(l2Sym.getCodeL1())) {
-                l2Sym.getAllSymMap().forEach((symName, sym) -> {
+        //所有level3的疾病们
+        HashMap<String, L3Sym> l3SymMap = DealData.getSymFromOriginalFile();
+        //        print(l3SymMap);
+        assert l3SymMap != null;
+        l3SymMap.values().forEach(l3Sym -> {
+            //根据第一部的结果，删除掉无关的level3
+            if (input.getL3name().contains(l3Sym.getNameL3())) {
+                l3Sym.getAllSymMap().forEach((symName, sym) -> {
+                    //                    System.out.println(symName);
                     if (inputList.contains(symName)) {
                         //将患病症状统计
-                        l2Sym.getSufferSymMap().put(symName, sym);
+                        l3Sym.getSufferSymMap().put(symName, sym);
                         //将该疾病的其他症状加入待计算列表里
-                        l2Sym.getAllSymMap().values().forEach(s -> {
+                        l3Sym.getAllSymMap().values().forEach(s -> {
                             SymptomProbability symptomProbability = new SymptomProbability(s.getName(), s.getRate());
                             if (!rateMatrix.contains(symptomProbability) && !inputList.contains(s.getName())) {
                                 rateMatrix.add(symptomProbability);
@@ -59,15 +56,15 @@ public class SymMethod {
                         });
                     }
                 });
-                if (l2Sym.getSufferSymMap().size() > 0) {
-                    L2symLess.add(l2Sym);
+                if (l3Sym.getSufferSymMap().size() > 0) {
+                    L3symLess.add(l3Sym);
                 }
             }
         });
         //计算每一个症状的概率
         for (String namei : inputList) {
             for (SymptomProbability j : rateMatrix) {
-                j.getRateList().add(calculatePs(L2symLess, namei, j.getName()));
+                j.getRateList().add(calculatePs(L3symLess, namei, j.getName()));
             }
         }
         //将上一步求出的n（症状的个数）个概率进行融合
@@ -85,26 +82,26 @@ public class SymMethod {
 
         // 系数M
         double M = 0;
-        for (L2Sym l2Sym : L2symLess) {
+        for (L3Sym l3Sym : L3symLess) {
             double rate = 0;
             //n个患有的症状对该疾病的贡献率的和
-            for (Sym sym : l2Sym.getSufferSymMap().values()) {
+            for (Sym sym : l3Sym.getSufferSymMap().values()) {
                 rate = rate + sym.getRate();
             }
             //【症状命中个数+系数M*(n个患有的症状对该疾病的贡献率的和)】
-            rate = (double) l2Sym.getSufferSymMap().size() + M * (rate);
+            rate = (double) l3Sym.getSufferSymMap().size() + M * (rate);
             //京伟给的该疾病的概率 *【症状命中个数+系数M*(n个患有的症状对该疾病的贡献率的和)】
-            if (step1Rate.containsKey(l2Sym.getCodeL2())) {
-                rate = rate * step1Rate.get(l2Sym.getCodeL2()).getRight();
+            if (diseaseRateMap.containsKey(l3Sym.getNameL3())) {
+                rate = rate * diseaseRateMap.get(l3Sym.getNameL3());
             }
             //若京伟没有给概率，将该疾病设置为0
             else {
                 rate = rate * 0;
             }
-            l2Sym.setRate(rate);
+            l3Sym.setRate(rate);
         }
         //得到疾病概率的排序
-        L2symLess.sort((l1, l2) -> Double.compare(l2.getRate(), l1.getRate()));
+        L3symLess.sort((l1, l2) -> Double.compare(l2.getRate(), l1.getRate()));
 
 
         //放到result的推荐疾病症状列表
@@ -115,9 +112,9 @@ public class SymMethod {
         }
         //放到result的诊断结果列表
         List<Diagnosis> diagnosis = new ArrayList<>();
-        L2symLess.forEach(l2Sym -> {
-            Diagnosis d = new Diagnosis(l2Sym.getCodeL1(), l2Sym.getNameL1(), l2Sym.getCodeL2(), l2Sym.getNameL2(), l2Sym
-                    .getSufferSymMap().size(), l2Sym.getRate(), l2Sym.getSufferSymMap());
+        L3symLess.forEach(l3Sym -> {
+            Diagnosis d = new Diagnosis(l3Sym.getCodeL3(), l3Sym.getNameL3(), l3Sym.getSufferSymMap().size(), l3Sym
+                    .getRate(), l3Sym.getSufferSymMap());
             diagnosis.add(d);
 
         });
@@ -131,11 +128,11 @@ public class SymMethod {
     }
 
     // 计算症状j 在症状i出现的情况下症状j出现的概率
-    private static double calculatePs(ArrayList<L2Sym> l2symLess, String namei, String namej) {
+    private static double calculatePs(ArrayList<L3Sym> l3symLess, String namei, String namej) {
         double Cj = 0;
         double Cij = 0;
-        for (L2Sym l2Sym : l2symLess) {
-            Set<String> keySet = l2Sym.getAllSymMap().keySet();
+        for (L3Sym l3Sym : l3symLess) {
+            Set<String> keySet = l3Sym.getAllSymMap().keySet();
             if (keySet.contains(namej)) {
                 Cj++;
                 if (keySet.contains(namei)) {

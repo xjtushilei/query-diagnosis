@@ -4,25 +4,25 @@ import java.util.HashMap;
 
 /**
  * @author shilei
- * @Date 2017/11/2.
+ * @Date 2017/10/30.
  */
-public class Diagnosis {
+public class L3Sym {
     // id
     private String codeL3;
     private String nameL3;
-    private int SymSum;
-    private double RateSum;
+    private HashMap<String, Sym> allSymMap;
     private HashMap<String, Sym> sufferSymMap;
+    private double rate;
 
-    public Diagnosis() {
+    public L3Sym() {
     }
 
-    public Diagnosis(String codeL3, String nameL3, int symSum, double rateSum, HashMap<String, Sym> sufferSymMap) {
+    public L3Sym(String nameL3, String codeL3) {
         this.codeL3 = codeL3;
         this.nameL3 = nameL3;
-        SymSum = symSum;
-        RateSum = rateSum;
-        this.sufferSymMap = sufferSymMap;
+        this.allSymMap = new HashMap<>();
+        this.sufferSymMap = new HashMap<>();
+        this.rate = 0.0;
     }
 
     public String getCodeL3() {
@@ -41,20 +41,12 @@ public class Diagnosis {
         this.nameL3 = nameL3;
     }
 
-    public int getSymSum() {
-        return SymSum;
+    public HashMap<String, Sym> getAllSymMap() {
+        return allSymMap;
     }
 
-    public void setSymSum(int symSum) {
-        SymSum = symSum;
-    }
-
-    public double getRateSum() {
-        return RateSum;
-    }
-
-    public void setRateSum(double rateSum) {
-        RateSum = rateSum;
+    public void setAllSymMap(HashMap<String, Sym> allSymMap) {
+        this.allSymMap = allSymMap;
     }
 
     public HashMap<String, Sym> getSufferSymMap() {
@@ -64,4 +56,13 @@ public class Diagnosis {
     public void setSufferSymMap(HashMap<String, Sym> sufferSymMap) {
         this.sufferSymMap = sufferSymMap;
     }
+
+    public double getRate() {
+        return rate;
+    }
+
+    public void setRate(double rate) {
+        this.rate = rate;
+    }
+
 }
