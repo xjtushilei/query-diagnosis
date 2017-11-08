@@ -22,7 +22,7 @@ public class TestV5WithConsole3Times {
     public static void main(String[] args) {
 
         //每一轮最多推荐几个症状
-        int maxRecommendSym = 6;
+        int maxRecommendSym = 5;
 
         //得到jingwei的诊断分类结果，包含概率
         Input input = diagnosisFirst();
@@ -37,47 +37,50 @@ public class TestV5WithConsole3Times {
         //第0轮结果
         Result result = diagnosis(newInput, input, maxRecommendSym, noUseInputList);
 
-        System.out.println("输入提示：回复数字编号，多个请用空格分割。最后按一个enter键确认！");
-        //第1轮的选择
-        System.out.println("------------------------------------");
-        List<ImmutablePair<String, Double>> recommendResult = result.getRecommendResult();
-        for (int i = 0; i < recommendResult.size(); i++) {
-            System.out.println(i + ":" + recommendResult.get(i).getLeft());
-        }
-        System.out.println(recommendResult.size() + ":" + "以上都没有");
-        System.out.println("------------------------------------");
-        System.out.println("Round 1 : 请选择以上几个症状您是否患有？");
-        //获取用户输入
-        Scanner sc = new Scanner(System.in);
-        String userInput = sc.next();
-        List<String> userInputNumList = Arrays.asList(userInput.trim().split(" "));
-
         int roundSum = 3;
-        //如果用户选择了“以上都没有”，并且初始轮是不正常推荐，则终止推荐.用户选择了部分高频率症状，则多加一轮推荐。
+        List<ImmutablePair<String, Double>> recommendResult = result.getRecommendResult();
+
         if (!result.isNormalRecommendation()) {
-            System.out.println("初始的症状没有一个出现在疾病中!");
+            System.out.println("输入提示：回复数字编号，多个请用空格分割。最后按一个enter键确认！");
+            //第1轮的选择
+            System.out.println("------------------------------------");
+            recommendResult = result.getRecommendResult();
+            for (int i = 0; i < recommendResult.size(); i++) {
+                System.out.println(i + ":" + recommendResult.get(i).getLeft());
+            }
+            System.out.println(recommendResult.size() + ":" + "以上都没有");
+            System.out.println("------------------------------------");
+            System.out.println("初始化症状 : 请选择以上几个症状您是否患有？");
+            //获取用户输入
+            Scanner sc = new Scanner(System.in);
+            String userInput = sc.next();
+            List<String> userInputNumList = Arrays.asList(userInput.trim().split(" "));
+
+            //如果用户选择了“以上都没有”，并且初始轮是不正常推荐，则终止推荐.用户选择了部分高频率症状，则多加一轮推荐。
+            //System.out.println("初始的症状没有一个出现在疾病中!");
             if (userInputNumList.contains(String.valueOf(recommendResult.size()))) {
-                System.out.println("很抱歉我们无法诊断您！");
+                System.out.println("您的选择没有一个出现在疾病中很抱歉我们无法诊断您！");
                 System.exit(0);
             } else {
                 //循环伦数＋1
-                System.out.println("round加1");
+                //System.out.println("round加1");
                 roundSum++;
             }
-        }
-        for (int i = 0; i < recommendResult.size(); i++) {
 
-            if (userInputNumList.contains(String.valueOf(i))) {
-                newInput.add(recommendResult.get(i).getLeft());
-            } else {
-                noUseInputList.add(recommendResult.get(i).getLeft());
+            for (int i = 0; i < recommendResult.size(); i++) {
+
+                if (userInputNumList.contains(String.valueOf(i))) {
+                    newInput.add(recommendResult.get(i).getLeft());
+                } else {
+                    noUseInputList.add(recommendResult.get(i).getLeft());
+                }
             }
         }
         //第1轮结果
         result = diagnosis(newInput, input, maxRecommendSym, noUseInputList);
 
 
-        for (int roundnow = 2; roundnow <= roundSum; roundnow++) {
+        for (int roundnow = 0; roundnow < roundSum; roundnow++) {
             //第x轮的选择
             System.out.println("------------------------------------");
             recommendResult = result.getRecommendResult();
@@ -88,9 +91,9 @@ public class TestV5WithConsole3Times {
             System.out.println("------------------------------------");
             System.out.println("Round " + roundnow + " : 请选择以上几个症状您是否患有");
             //获取用户输入
-            sc = new Scanner(System.in);
-            userInput = sc.next();
-            userInputNumList = Arrays.asList(userInput.trim().split(" "));
+            Scanner sc = new Scanner(System.in);
+            String userInput = sc.next();
+            List<String> userInputNumList = Arrays.asList(userInput.trim().split(" "));
             for (int i = 0; i < recommendResult.size(); i++) {
 
                 if (userInputNumList.contains(String.valueOf(i))) {
@@ -103,9 +106,11 @@ public class TestV5WithConsole3Times {
             result = diagnosis(newInput, input, maxRecommendSym, noUseInputList);
         }
 
-
+        System.out.println("诊断结果: ");
         //打印最后的结果
-        print(result);
-
+        for (int i = 0; i < result.getDiagnosis().size(); i++) {
+            print(result.getDiagnosis().get(i).getNameL3());
+            print(result.getDiagnosis().get(i).getSufferSymMap().values());
+        }
     }
 }
