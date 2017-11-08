@@ -3,12 +3,10 @@ package com.xjtushilei.querydiagnosis.core.sym;
 import com.xjtushilei.querydiagnosis.entity.sym.*;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static com.xjtushilei.querydiagnosis.core.sym.ClassificationOfDiseases.diagnosisFirst;
+import static com.xjtushilei.querydiagnosis.utils.GsonUtils.print;
 
 
 /**
@@ -20,12 +18,22 @@ public class SymMethod {
         //得到jingwei的诊断分类结果，包含概率
         Input input = diagnosisFirst();
         //        getSymptomRecommend(Arrays.asList("呕吐", "上吐下泻"));
-        Result result = diagnosis(input.getInput(), input, 6);
-        //        print(result);
+        Result result = diagnosis(input.getInput(), input, 6, Arrays.asList());
+        print(result);
     }
 
+    /**
+     * @param inputList      用户输入的症状
+     * @param input          京伟的的诊断结果
+     * @param returnMaxSyms  最大推荐的症状个数
+     * @param noUseInputList 用户在所有轮中没有选择的症状
+     * @return 诊断结果
+     */
     public static Result diagnosis(List<String> inputList, Input input, int
-            returnMaxSyms) {
+            returnMaxSyms, List<String> noUseInputList) {
+        Result result = new Result();
+
+
         HashMap<String, Double> diseaseRateMap = new HashMap<>();
         for (int i = 0; i < input.getL3name().size(); i++) {
             diseaseRateMap.put(input.getL3name().get(i), input.getL3rate().get(i));
@@ -37,8 +45,8 @@ public class SymMethod {
         ArrayList<SymptomProbability> rateMatrix = new ArrayList<>();
         //所有level3的疾病们
         HashMap<String, L3Sym> l3SymMap = DealData.getSymFromOriginalFile();
-        //        print(l3SymMap);
         assert l3SymMap != null;
+        final int[] countFlag = {0};
         l3SymMap.values().forEach(l3Sym -> {
             //根据第一部的结果，删除掉无关的level3
             if (input.getL3name().contains(l3Sym.getNameL3())) {
@@ -47,30 +55,38 @@ public class SymMethod {
                     if (inputList.contains(symName)) {
                         //将患病症状统计
                         l3Sym.getSufferSymMap().put(symName, sym);
-                        //将该疾病的其他症状加入待计算列表里
-                        l3Sym.getAllSymMap().values().forEach(s -> {
-                            SymptomProbability symptomProbability = new SymptomProbability(s.getName(), s.getRate());
-                            if (!rateMatrix.contains(symptomProbability) && !inputList.contains(s.getName())) {
-                                rateMatrix.add(symptomProbability);
-                            }
-                        });
+                        countFlag[0] = countFlag[0] + 1;
                     }
+                    //将该疾病的其他症状加入待计算列表里
+                    l3Sym.getAllSymMap().values().forEach(s -> {
+                        SymptomProbability symptomProbability = new SymptomProbability(s.getName(), s.getRate());
+                        if (!rateMatrix.contains(symptomProbability) && !inputList.contains(s.getName())) {
+                            rateMatrix.add(symptomProbability);
+                        }
+                    });
                 });
-                if (l3Sym.getSufferSymMap().size() > 0) {
-                    L3symLess.add(l3Sym);
-                }
+                L3symLess.add(l3Sym);
             }
         });
-        //计算每一个症状的概率
-        for (String namei : inputList) {
+        if (countFlag[0] > 0) {
+            //计算每一个症状的概率
+            for (String namei : inputList) {
+                for (SymptomProbability j : rateMatrix) {
+                    j.getRateList().add(calculatePs(L3symLess, namei, j.getName()));
+                }
+            }
+            //将上一步求出的n（症状的个数）个概率进行融合
             for (SymptomProbability j : rateMatrix) {
-                j.getRateList().add(calculatePs(L3symLess, namei, j.getName()));
+                //设置排序概率的公式，目前是n个症状的肚子的概率利用“概率加法公式”进行融合，然后再和0.5进行比较，再平方，再用1减。
+                j.setOurRate(1 - Math.pow(calculatePlus(j.getRateList()) - 0.5, 2));
             }
         }
-        //将上一步求出的n（症状的个数）个概率进行融合
-        for (SymptomProbability j : rateMatrix) {
-            //设置排序概率的公式，目前是n个症状的肚子的概率利用“概率加法公式”进行融合，然后再和0.5进行比较，再平方，再用1减。
-            j.setOurRate(1 - Math.pow(calculatePlus(j.getRateList()) - 0.5, 2));
+        // 如果没有匹配到症状，则直接利用苏丽娟给的概率，选出最常见的几个症状。
+        else {
+            result.setNormalRecommendation(false);
+            for (SymptomProbability j : rateMatrix) {
+                j.setOurRate(j.getRate());
+            }
         }
         //得到最值得推荐的症状的概率，之后直接取top-n就行了
         rateMatrix.sort((l1, l2) -> Double.compare(l2.getOurRate(), l1.getOurRate()));
@@ -106,8 +122,13 @@ public class SymMethod {
 
         //放到result的推荐疾病症状列表
         List<ImmutablePair<String, Double>> recommendResult = new ArrayList<>();
-        for (int i = 0; i < rateMatrix.size() && i < returnMaxSyms; i++) {
+        for (int i = 0; i < rateMatrix.size() && recommendResult.size() < returnMaxSyms; i++) {
+
             SymptomProbability symptomProbability = rateMatrix.get(i);
+            //如果该症状上一次用户没有选，则下次不推荐.
+            if (noUseInputList.contains(symptomProbability.getName())) {
+                continue;
+            }
             recommendResult.add(new ImmutablePair<>(symptomProbability.getName(), symptomProbability.getOurRate()));
         }
         //放到result的诊断结果列表
@@ -118,7 +139,7 @@ public class SymMethod {
             diagnosis.add(d);
 
         });
-        Result result = new Result();
+
         result.setCode(200);
         result.setMsg("推荐成功!");
         result.setDiagnosis(diagnosis);

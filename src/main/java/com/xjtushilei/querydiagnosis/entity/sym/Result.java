@@ -11,6 +11,7 @@ import java.util.List;
 public class Result {
     private Integer code;
     private String msg;
+    private boolean normalRecommendation;
 
     //推荐的疾病症状
     List<ImmutablePair<String, Double>> recommendResult;
@@ -18,13 +19,7 @@ public class Result {
     private List<Diagnosis> diagnosis;
 
     public Result() {
-    }
-
-    public Result(Integer code, String msg, List<ImmutablePair<String, Double>> recommendResult, List<Diagnosis> diagnosis) {
-        this.code = code;
-        this.msg = msg;
-        this.recommendResult = recommendResult;
-        this.diagnosis = diagnosis;
+        this.normalRecommendation = true;
     }
 
     public Integer getCode() {
@@ -58,5 +53,13 @@ public class Result {
 
     public void setDiagnosis(List<Diagnosis> diagnosis) {
         this.diagnosis = diagnosis;
+    }
+
+    public boolean isNormalRecommendation() {
+        return normalRecommendation;
+    }
+
+    public void setNormalRecommendation(boolean normalRecommendation) {
+        this.normalRecommendation = normalRecommendation;
     }
 }

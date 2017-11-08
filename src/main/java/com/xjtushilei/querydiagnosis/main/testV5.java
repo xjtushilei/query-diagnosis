@@ -3,6 +3,8 @@ package com.xjtushilei.querydiagnosis.main;
 import com.xjtushilei.querydiagnosis.entity.sym.Input;
 import com.xjtushilei.querydiagnosis.entity.sym.Result;
 
+import java.util.Arrays;
+
 import static com.xjtushilei.querydiagnosis.core.sym.ClassificationOfDiseases.diagnosisFirst;
 import static com.xjtushilei.querydiagnosis.core.sym.SymMethod.diagnosis;
 import static com.xjtushilei.querydiagnosis.utils.GsonUtils.print;
@@ -23,8 +25,10 @@ public class testV5 {
          *  数字是返回前几个推荐症状
          *  第二轮 只需要在Arrays.asList里增加新的症状就行了
          */
-        Result result = diagnosis(input.getInput(), input, 6);
+        Result result = diagnosis(input.getInput(), input, 6, Arrays.asList());
         print(result);
+        result.getRecommendResult().forEach(stringDoubleImmutablePair -> System.out.print(stringDoubleImmutablePair
+                .getLeft() + "\t"));
 
     }
 }

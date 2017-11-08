@@ -27,7 +27,7 @@ public class ClassificationOfDiseases {
         try {
             File file = ResourceUtils.getFile("classpath:data/test1.txt");
             List<String> list = org.apache.commons.io.FileUtils.readLines(file, "utf-8");
-            input.setInput(Arrays.asList(list.get(0).trim().split(",")));
+            input.setInput(Arrays.asList(list.get(4).trim().split(",")));
             input.setL3name(Arrays.asList(list.get(1).replaceAll("['\\[\\]]", "").trim().split(" ")));
             List<Double> rateList = new ArrayList<>();
             Arrays.asList(list.get(2).replaceAll("[\\[\\]]", "").trim().split(",")).forEach(s -> rateList.add(Double.parseDouble(s)));
